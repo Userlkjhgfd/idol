@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>マイ・アイドルガチャ</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@400;700;900&display=swap">
+<style>
+:root{
+  --bg:#f6f1f7;--ink:#2a2140;--sub:#6f6685;--card:#fff;--line:#ddd3e6;--accent:#e0457b;--on-accent:#fff;
+  --r1:#7d8699;--r2:#3f86d0;--r3:#8e47d0;--r4:#d98f00;
+  --a-elegance:#c3b1ec;--a-cool:#ff8fc0;--a-cute:#8fd8f2;--a-sexy:#5fcf8a;
+}
+@media (prefers-color-scheme:dark){:root{--bg:#1b1528;--ink:#f1ecf8;--sub:#a99fc0;--card:#2a2140;--line:#41365c;--accent:#ff6a9e;--on-accent:#2a1020}}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{margin:0}
+body{font-family:"Zen Maru Gothic",system-ui,sans-serif;background:var(--bg);color:var(--ink);padding:env(safe-area-inset-top) 0 calc(76px + env(safe-area-inset-bottom));min-height:100vh}
+main{max-width:560px;margin:0 auto;padding:16px}
+h1{font-size:22px;font-weight:900;margin:4px 0 14px}
+h2{font-size:16px;margin:18px 0 8px}
+button{font:inherit;cursor:pointer}
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.btn{border-radius:14px;padding:14px 16px;font-weight:700;background:var(--card);color:var(--ink);border:1.5px solid var(--line)}
+.btn.main{background:var(--accent);color:var(--on-accent);border-color:var(--accent)}
+.btn:disabled{opacity:.4}
+.row{display:flex;gap:10px}.row>*{flex:1}
+.stat{display:flex;justify-content:space-between;align-items:center;background:var(--card);border:1.5px solid var(--line);border-radius:14px;padding:12px 14px;margin-bottom:12px;font-size:14px}
+.stat b{font-size:20px}.stat .r{text-align:right}
+nav{position:fixed;left:0;right:0;bottom:0;display:flex;background:var(--card);border-top:1.5px solid var(--line);padding-bottom:env(safe-area-inset-bottom);z-index:5}
+nav button{flex:1;padding:12px 0;border:0;background:none;color:var(--sub);font-weight:700;font-size:13px}
+nav button[aria-current=true]{color:var(--accent);box-shadow:inset 0 3px 0 var(--accent)}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(106px,1fr));gap:10px}
+.pc{position:relative;background:var(--card);border:3px solid var(--ac,var(--line));border-radius:12px;overflow:hidden;text-align:center;padding-bottom:6px;cursor:pointer}
+.pc.sel{outline:4px solid var(--accent);outline-offset:-2px}
+.pc .img{aspect-ratio:3/4;background:var(--line) center/cover no-repeat}
+.pc .nm{font-size:12px;font-weight:700;padding:5px 4px 2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.chips{display:flex;gap:4px;justify-content:center;font-size:10px;padding-bottom:2px}
+.chips b{border-radius:8px;padding:0 6px;color:#fff;background:var(--rc)}
+.chips i{border-radius:8px;padding:0 6px;font-style:normal;font-weight:700;background:var(--ac);color:#2a2140}
+.pc .lv{font-size:11px;color:var(--sub)}
+.rar1{--rc:var(--r1)}.rar2{--rc:var(--r2)}.rar3{--rc:var(--r3)}.rar4{--rc:var(--r4);box-shadow:0 0 10px var(--r4)}
+.pc.lock{cursor:default}.pc.lock .img{filter:grayscale(1) brightness(.3)}
+.panel{background:var(--card);border:1.5px solid var(--line);border-radius:14px;padding:14px;margin-bottom:12px}
+label{display:block;font-size:13px;font-weight:700;margin:10px 0 4px}
+input[type=text],select{width:100%;font:inherit;padding:11px;border-radius:10px;border:1.5px solid var(--line);background:var(--bg);color:var(--ink)}
+.sortbar{display:flex;align-items:center;gap:10px;margin-bottom:10px}.sortbar label{margin:0;white-space:nowrap}
+.prev{width:96px;aspect-ratio:3/4;border-radius:10px;background:var(--line) center/cover no-repeat;margin-top:8px}
+.li{display:flex;align-items:center;gap:10px;padding:8px 0;border-top:1px solid var(--line)}
+.li .th{width:42px;height:56px;border-radius:6px;background:var(--line) center/cover;flex:none}
+.li .t{flex:1;font-size:14px;font-weight:700}.li .t small{display:block;color:var(--sub);font-weight:400}
+.li button{padding:8px 10px;font-size:12px}
+.muted{color:var(--sub);font-size:13px}
+.empty{text-align:center;padding:30px 12px;color:var(--sub)}
+.live{display:flex;justify-content:space-between;align-items:center;width:100%;margin-bottom:8px;text-align:left}
+.live span{font-size:12px;font-weight:400;color:var(--sub)}
+.hist div{font-size:13px;padding:5px 0;border-top:1px solid var(--line);display:flex;gap:8px}.hist span{color:var(--sub);flex:none;width:84px}
+.toast{position:fixed;left:50%;bottom:calc(90px + env(safe-area-inset-bottom));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:20px;font-size:13px;z-index:40}
+#sheet{position:fixed;inset:0;z-index:15;background:rgba(10,5,20,.55);display:flex;align-items:flex-end}
+.sheet-in{background:var(--card);width:100%;max-width:560px;margin:0 auto;max-height:86vh;overflow:auto;border-radius:18px 18px 0 0;padding:16px 16px calc(16px + env(safe-area-inset-bottom))}
+.sh{display:flex;gap:14px;align-items:center;margin-bottom:12px}.sh .w{width:130px;flex:none}
+.sheet-in .btn{width:100%;margin-top:8px}
+
+/* ステージ演出 */
+#stage{position:fixed;inset:0;z-index:30;background:#07040f;color:#fff;overflow:hidden;user-select:none;-webkit-tap-highlight-color:transparent}
+#stage .beams{position:absolute;inset:0;opacity:0;transition:opacity .5s}
+#stage.lit .beams{opacity:1}
+.beams i{position:absolute;top:-6%;left:50%;width:44vw;margin-left:-22vw;height:118%;transform-origin:50% 0;background:linear-gradient(to bottom,var(--bc),transparent 78%);opacity:.5;clip-path:polygon(47% 0,53% 0,100% 100%,0 100%);transform:rotate(var(--rot));animation:sway 2.4s ease-in-out var(--d) infinite alternate}
+.ssr .beams i,.e .beams i{opacity:.75;animation-duration:.9s}
+@keyframes sway{from{transform:rotate(calc(var(--rot) - 9deg))}to{transform:rotate(calc(var(--rot) + 9deg))}}
+.floor{position:absolute;left:0;right:0;bottom:0;height:38%;background:radial-gradient(ellipse at 50% 100%,rgba(255,120,200,.4),transparent 70%)}
+.pens{position:absolute;left:0;right:0;bottom:0;height:72px;display:flex;justify-content:space-around;align-items:flex-end;padding-bottom:6px;background:linear-gradient(to top,#000,transparent)}
+.pens span{width:6px;height:44px;border-radius:3px;background:var(--pc);box-shadow:0 0 12px var(--pc);transform-origin:50% 100%;animation:pen 1s ease-in-out var(--d) infinite alternate}
+@keyframes pen{from{transform:rotate(-16deg)}to{transform:rotate(16deg)}}
+.count{position:absolute;top:calc(14px + env(safe-area-inset-top));right:16px;font-size:14px;opacity:.8}
+.cw{position:absolute;left:0;right:0;top:0;bottom:96px;display:flex;flex-direction:column;align-items:center;justify-content:center;perspective:900px}
+.scard{width:min(54vw,240px);aspect-ratio:3/4;border-radius:14px;border:3px solid var(--rc,#fff);background:#222 center/cover no-repeat;box-shadow:0 0 30px var(--rc,#fff);opacity:0}
+.show .scard,.e .scard{opacity:1}
+.show .scard{animation:rise .8s cubic-bezier(.2,.9,.3,1)}
+.ssr.show .scard{animation:rise .8s cubic-bezier(.2,.9,.3,1),glow 1s .8s ease-in-out infinite alternate}
+.ssr.show{animation:shake .5s}
+@keyframes rise{from{transform:translateY(60vh) scale(.5);opacity:0}to{transform:none;opacity:1}}
+@keyframes glow{from{box-shadow:0 0 24px #ffd54a}to{box-shadow:0 0 60px 10px #ff6ad5}}
+@keyframes shake{0%,100%{transform:none}20%{transform:translate(-6px,4px)}40%{transform:translate(6px,-4px)}60%{transform:translate(-4px,-3px)}80%{transform:translate(4px,3px)}}
+.scard.spin{animation:spin 3.2s forwards}
+@keyframes spin{0%{transform:rotateY(0) scale(1);animation-timing-function:ease-in}50%{transform:rotateY(810deg) scale(1.35);animation-timing-function:ease-out}100%{transform:rotateY(1440deg) scale(1)}}
+.info{opacity:0;text-align:center;margin-top:14px;transition:opacity .4s}
+.done .info{opacity:1}
+.info .big{font-size:38px;font-weight:900;color:var(--rc,#fff);text-shadow:0 0 14px var(--rc,#fff)}
+.ssr .info .big,.e .info .big{font-size:54px;background:linear-gradient(90deg,#ffd54a,#ff6ad5,#6ad8ff);-webkit-background-clip:text;background-clip:text;color:transparent;text-shadow:none;animation:pop .6s}
+@keyframes pop{from{transform:scale(.3);opacity:0}to{transform:none;opacity:1}}
+.info .nm{font-size:18px;font-weight:700}.info .sub{font-size:13px;opacity:.8}
+.hint{position:absolute;left:0;right:0;bottom:84px;text-align:center;font-size:13px;opacity:0}
+.done .hint{opacity:.8;animation:blink 1.4s infinite}
+@keyframes blink{50%{opacity:.2}}
+.flash{position:absolute;inset:0;background:#fff;opacity:0;pointer-events:none}
+.ssr.lit .flash,.burst .flash{animation:flash 1s}
+@keyframes flash{0%{opacity:.95}100%{opacity:0}}
+.ring{position:absolute;left:50%;top:42%;width:20px;height:20px;margin:-10px;border-radius:50%;border:2px solid #ffd54a;opacity:0}
+.ssr.show .ring,.burst .ring{animation:ring 1s ease-out}
+@keyframes ring{0%{transform:scale(1);opacity:1}100%{transform:scale(40);opacity:0}}
+.conf{position:absolute;inset:0;pointer-events:none;overflow:hidden}
+.conf span{position:absolute;top:-20px;left:var(--x);width:8px;height:14px;background:var(--c);animation:fall var(--du) linear var(--dl) forwards}
+@keyframes fall{to{transform:translateY(110vh) rotate(720deg)}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<main id="app"></main>
+<nav id="nav"></nav>
+<div id="sheet" hidden></div>
+<div id="stage" hidden></div>
+
+<script>
+"use strict";
+/* ---------- ルール ---------- */
+const RAR={1:"N",2:"R",3:"SR",4:"SSR"};
+const ATTRS=["elegance","cool","cute","sexy"];            // 色は CSS の --a-属性名
+const BASE_LV={1:25,2:35,3:45,4:55};                      // 覚醒0の最大レベル
+const EVO_LV={3:45,4:55};                                 // 進化レベル(SR/SSRのみ)
+const MAX_AWK=5, AWK_STEP=2, PARTY_MAX=10, IMG_MAX=480;
+const RATES={4:5,3:15,2:30,1:50};                         // 排出率(%)
+const LIVES=[
+  {k:"stadium",n:"スタジアム",st:50,xp:1000},{k:"dome",n:"ドーム",st:30,xp:550},
+  {k:"arena",n:"アリーナ",st:25,xp:350},{k:"hall",n:"ホール",st:20,xp:240},{k:"studio",n:"スタジオ",st:10,xp:100}];
+const REG={tickets:{at:"tickAt",ms:3600000,max:30},stamina:{at:"stamAt",ms:180000,max:100}}; // 1時間1枚 / 3分1回復
+const need=lv=>Math.round(50+lv*lv/2);                    // 次のレベルまでの必要経験値
+const RM=matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+/* ---------- 保存 ---------- */
+let db,chars=[],S,keyOf=new Map();
+function openDB(){return new Promise((res,rej)=>{const q=indexedDB.open("idol-gacha",1);
+  q.onupgradeneeded=()=>q.result.createObjectStore("chars",{keyPath:"id"});
+  q.onsuccess=()=>res(q.result);q.onerror=()=>rej(q.error)})}
+const tx=m=>db.transaction("chars",m).objectStore("chars");
+const dbAll=()=>new Promise((r,j)=>{const q=tx("readonly").getAll();q.onsuccess=()=>r(q.result);q.onerror=()=>j(q.error)});
+const dbPut=c=>!db?Promise.resolve():new Promise((r,j)=>{const q=tx("readwrite").put(c);q.onsuccess=()=>r();q.onerror=()=>j(q.error)});
+const dbDel=id=>!db?Promise.resolve():new Promise(r=>{const q=tx("readwrite").delete(id);q.onsuccess=()=>r()});
+const dbClear=()=>!db?Promise.resolve():new Promise(r=>{const q=tx("readwrite").clear();q.onsuccess=()=>r()});
+const newId=()=>crypto.randomUUID?crypto.randomUUID():Date.now().toString(36)+Math.random().toString(36).slice(2);
+const fresh=()=>{const n=Date.now();return{copies:[],party:[],history:[],total:0,tickets:REG.tickets.max,tickAt:n,stamina:REG.stamina.max,stamAt:n,nextUid:1}};
+function loadState(){let s=null;try{s=JSON.parse(localStorage.getItem("idol-gacha-v3"))}catch(e){}S=Object.assign(fresh(),s||{})}
+function save(){try{localStorage.setItem("idol-gacha-v3",JSON.stringify(S))}catch(e){toast("保存に失敗しました")}}
+
+/* ---------- ユーティリティ ---------- */
+const $=(s,r=document)=>r.querySelector(s);
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+function toast(m){const t=document.createElement("div");t.className="toast";t.textContent=m;document.body.append(t);setTimeout(()=>t.remove(),2200)}
+const bg=i=>i?`background-image:url(${i})`:"";
+async function resize(file){
+  const loadImg=src=>new Promise((res,rej)=>{const im=new Image();im.onload=()=>res(im);im.onerror=()=>rej(new Error("img"));im.src=src});
+  let src=null;
+  try{src=await createImageBitmap(file,{imageOrientation:"from-image"})}catch(e){
+    try{src=await createImageBitmap(file)}catch(e2){src=null}}
+  if(!src){
+    try{const url=await new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result);r.onerror=()=>rej(r.error);r.readAsDataURL(file)});
+      src=await loadImg(url)}
+    catch(e){throw new Error(`この画像は読み込めません(形式: ${file.type||"不明"}、${(file.size/1048576).toFixed(1)}MB)。別の画像か、スクリーンショットでお試しください`)}}
+  const w=src.width||src.naturalWidth,h=src.height||src.naturalHeight,k=Math.min(1,IMG_MAX/Math.max(w,h));
+  const cv=document.createElement("canvas");cv.width=Math.max(1,Math.round(w*k));cv.height=Math.max(1,Math.round(h*k));
+  const x=cv.getContext("2d");x.fillStyle="#fff";x.fillRect(0,0,cv.width,cv.height);x.drawImage(src,0,0,cv.width,cv.height);
+  if(src.close)src.close();
+  return cv.toDataURL("image/jpeg",.85)}
+function hash(s){let h=0;for(let i=0;i<s.length;i++)h=(h*31+s.charCodeAt(i))|0;return h}
+function rebuildKeys(){keyOf.clear();chars.forEach(c=>keyOf.set(c.id,`${c.name}|${c.rarity}|${hash(c.img||"")}`))}
+const chr=id=>chars.find(c=>c.id===id);
+const cpOf=u=>S.copies.find(c=>c.uid===u);
+const sameChar=(a,b)=>keyOf.get(a.cid)===keyOf.get(b.cid);   // 同名・同ランク・進化前の画像が一致
+const maxLv=cp=>BASE_LV[chr(cp.cid).rarity]+AWK_STEP*cp.awk;
+const imgOf=cp=>{const c=chr(cp.cid);return cp.evo&&c.evoImg?c.evoImg:c.img};
+function removeCopy(uid){S.copies=S.copies.filter(c=>c.uid!==uid);S.party=S.party.filter(u=>u!==uid)}
+
+/* ---------- 回復(チケット / スタミナ) ---------- */
+function regen(k){const c=REG[k],now=Date.now();let ch=false;
+  if(S[k]>=c.max){if(S[k]>c.max){S[k]=c.max;ch=true}S[c.at]=now}
+  else{const g=Math.floor((now-S[c.at])/c.ms);
+    if(g>0){S[k]=Math.min(c.max,S[k]+g);S[c.at]+=g*c.ms;if(S[k]>=c.max)S[c.at]=now;ch=true}
+    else if(g<0){S[c.at]=now;ch=true}}
+  if(ch)save()}
+function nextTxt(k){const c=REG[k];if(S[k]>=c.max)return"満タンです";
+  const ms=Math.max(0,S[c.at]+c.ms-Date.now());return`次の回復まで ${Math.floor(ms/60000)}分${String(Math.floor(ms/1000)%60).padStart(2,"0")}秒`}
+function tick(){regen("tickets");regen("stamina");
+  const t=$("#tk");if(t){t.textContent=S.tickets;$("#tn").textContent=nextTxt("tickets");$("#p1").disabled=S.tickets<1;$("#p10").disabled=S.tickets<10}
+  const m=$("#sm");if(m){m.textContent=S.stamina;$("#sn").textContent=nextTxt("stamina");
+    document.querySelectorAll("[data-live]").forEach(b=>{b.disabled=!S.party.length||S.stamina<+b.dataset.st})}}
+
+/* ---------- カード表示 / 並び替え ---------- */
+function cardH(cp,cls=""){const c=chr(cp.cid);
+  return`<div class="pc rar${c.rarity}${cls}" data-u="${cp.uid}" style="--ac:var(--a-${c.attr})"><div class="img" style="${bg(imgOf(cp))}"></div>
+  <div class="nm">${esc(c.name)}</div><div class="chips"><b>${RAR[c.rarity]}</b><i>${c.attr}</i></div>
+  <div class="lv">Lv ${cp.lv}/${maxLv(cp)}</div><div class="lv">覚醒 ${cp.awk}/${MAX_AWK}${cp.evo?" ・進化済":""}</div></div>`}
+const nameCmp=(a,b)=>chr(a.cid).name.localeCompare(chr(b.cid).name,"ja");
+const SORTS={
+  rarity:["ランク順",(a,b)=>chr(b.cid).rarity-chr(a.cid).rarity||b.lv-a.lv||nameCmp(a,b)],
+  attr:["属性順",(a,b)=>ATTRS.indexOf(chr(a.cid).attr)-ATTRS.indexOf(chr(b.cid).attr)||chr(b.cid).rarity-chr(a.cid).rarity||b.lv-a.lv],
+  lv:["レベル順",(a,b)=>b.lv-a.lv||chr(b.cid).rarity-chr(a.cid).rarity],
+  awk:["覚醒数順",(a,b)=>b.awk-a.awk||chr(b.cid).rarity-chr(a.cid).rarity||b.lv-a.lv],
+  new:["新しい順",(a,b)=>b.uid-a.uid]};
+let sortKey="rarity";
+const sortUI=()=>`<div class="sortbar"><label for="so">並び替え</label><select id="so">${Object.entries(SORTS).map(([k,v])=>`<option value="${k}" ${k===sortKey?"selected":""}>${v[0]}</option>`).join("")}</select></div>`;
+const sorted=()=>[...S.copies].sort(SORTS[sortKey][1]);
+function bindSort(){const s=$("#so");if(s)s.onchange=()=>{sortKey=s.value;render(true)}}
+
+/* ---------- 画面切り替え ---------- */
+let tab="gacha",results=[],liveRes=null,picking=false,pickSel=[],editing=null,dImg=null,dEvo=null;
+const TABS=[["gacha","ガチャ"],["live","ライブ"],["book","図鑑"],["reg","登録"],["set","その他"]];
+$("#nav").onclick=e=>{const b=e.target.closest("button");if(!b)return;
+  tab=b.dataset.t;results=[];liveRes=null;picking=false;editing=null;dImg=dEvo=null;render()};
+function render(keep){
+  $("#nav").innerHTML=TABS.map(([k,l])=>`<button data-t="${k}" ${k===tab?'aria-current="true"':""}>${l}</button>`).join("");
+  ({gacha:vGacha,live:vLive,book:vBook,reg:vReg,set:vSet})[tab]();bindSort();tick();if(!keep)scrollTo(0,0)}
+
+/* ---------- ガチャ ---------- */
+function vGacha(){
+  let h=`<h1>マイ・アイドルガチャ</h1>
+  <div class="stat"><div>ガチャチケット<br><span class="muted" id="tn"></span></div><div class="r"><b id="tk">${S.tickets}</b> / ${REG.tickets.max} 枚</div></div>
+  <p class="muted" style="margin:-2px 0 12px">排出率 SSR ${RATES[4]}% / SR ${RATES[3]}% / R ${RATES[2]}% / N ${RATES[1]}%</p>
+  <div class="row"><button class="btn main" id="p1">1回(1枚)</button><button class="btn main" id="p10">10連(10枚)</button></div>`;
+  if(!chars.length)h+=`<div class="empty">キャラがまだいません。<br>「登録」タブで追加してください。</div>`;
+  if(results.length)h+=`<h2>結果</h2><div class="grid">${results.map(cp=>cardH(cp)).join("")}</div>`;
+  $("#app").innerHTML=h;$("#app").onclick=null;
+  $("#p1").onclick=()=>pull(1);$("#p10").onclick=()=>pull(10)}
+function pickRarity(){
+  const av=[4,3,2,1].filter(r=>chars.some(c=>c.rarity===r));if(!av.length)return 0;
+  let x=Math.random()*av.reduce((a,r)=>a+RATES[r],0);
+  for(const r of av){x-=RATES[r];if(x<0)return r}return av[av.length-1]}
+async function pull(n){
+  if(!chars.length){toast("先にキャラを登録してください");return}
+  regen("tickets");if(S.tickets<n){toast(`チケットが足りません(${n}枚必要)`);return}
+  S.tickets-=n;const out=[];
+  for(let i=0;i<n;i++){
+    const r=pickRarity(),pool=chars.filter(c=>c.rarity===r),c=pool[Math.floor(Math.random()*pool.length)];
+    const cp={uid:S.nextUid++,cid:c.id,lv:1,exp:0,awk:0,evo:false};
+    S.copies.push(cp);S.total++;S.history.unshift({t:Date.now(),cid:c.id,r});out.push(cp)}
+  S.history.length=Math.min(S.history.length,300);save();
+  await playGacha(out);results=out;render()}
+
+/* ---------- ステージ演出 ---------- */
+const wait=ms=>new Promise(r=>setTimeout(r,RM?Math.min(ms,120):ms));
+const stage=$("#stage");
+const tapWait=()=>new Promise(r=>{const f=()=>{stage.removeEventListener("click",f);r()};stage.addEventListener("click",f)});
+function beamsH(rich){const cols=rich?["#ffd54a","#ff6ad5","#6ad8ff","#9cff7a"]:["#ffffff","#ffb3d9","#b3e3ff"];
+  return`<div class="beams">${cols.map((c,i)=>`<i style="--bc:${c};--rot:${-34+i*68/(cols.length-1)}deg;--d:${i*.25}s"></i>`).join("")}</div>`}
+function pensH(){const cs=["#ff8fc0","#8fd8f2","#c3b1ec","#5fcf8a","#ffd54a","#fff"];
+  return`<div class="pens">${Array.from({length:18},(_,i)=>`<span style="--pc:${cs[(i*5+(Math.random()*3|0))%cs.length]};--d:${(Math.random()*.9).toFixed(2)}s"></span>`).join("")}</div>`}
+function confetti(n){if(RM)return;const el=$(".conf",stage),cs=["#ffd54a","#ff6ad5","#6ad8ff","#9cff7a","#fff"];
+  el.innerHTML=Array.from({length:n},()=>`<span style="--x:${(Math.random()*100).toFixed(1)}%;--c:${cs[Math.random()*cs.length|0]};--dl:${(Math.random()*.8).toFixed(2)}s;--du:${(1.6+Math.random()*1.4).toFixed(2)}s"></span>`).join("")}
+async function playGacha(list){
+  stage.hidden=false;
+  for(let i=0;i<list.length;i++){
+    const cp=list[i],c=chr(cp.cid),ssr=c.rarity===4;
+    stage.className=ssr?"ssr":"";stage.style.setProperty("--rc",`var(--r${c.rarity})`);
+    stage.innerHTML=`${beamsH(ssr)}<div class="floor"></div><div class="flash"></div><div class="conf"></div><div class="ring"></div>
+    <div class="count">${i+1} / ${list.length}</div>
+    <div class="cw"><div class="scard" style="${bg(imgOf(cp))}"></div>
+    <div class="info"><div class="big">${RAR[c.rarity]}</div><div class="nm">${esc(c.name)}</div><div class="sub">${c.attr}</div></div></div>
+    <div class="hint">タップで次へ</div>${pensH()}`;
+    await wait(700);stage.classList.add("lit");
+    await wait(ssr?1000:600);stage.classList.add("show");if(ssr)confetti(60);
+    await wait(ssr?1500:900);stage.classList.add("done");
+    await tapWait()}
+  stage.hidden=true;stage.innerHTML=""}
+async function playEvo(cp){
+  const c=chr(cp.cid);
+  stage.hidden=false;stage.className="e";stage.style.setProperty("--rc","var(--r4)");
+  stage.innerHTML=`${beamsH(true)}<div class="floor"></div><div class="flash"></div><div class="conf"></div><div class="ring"></div>
+  <div class="cw"><div class="scard" style="${bg(c.img)}"></div>
+  <div class="info"><div class="big">進化!</div><div class="nm">${esc(c.name)}</div><div class="sub">Lv ${cp.lv}・覚醒 ${cp.awk} を引き継ぎました</div></div></div>
+  <div class="hint">タップで次へ</div>${pensH()}`;
+  const card=$(".scard",stage);
+  await wait(300);stage.classList.add("lit");await wait(600);
+  card.classList.add("spin");await wait(1600);
+  card.style.backgroundImage=`url(${c.evoImg})`;stage.classList.add("burst");confetti(70);
+  await wait(1700);stage.classList.add("done");
+  await tapWait();stage.hidden=true;stage.innerHTML=""}
+
+/* ---------- ライブ ---------- */
+function gain(cp,xp){const mx=maxLv(cp);
+  if(cp.lv>=mx){cp.lv=mx;cp.exp=0;return}
+  cp.exp+=xp;while(cp.lv<mx&&cp.exp>=need(cp.lv)){cp.exp-=need(cp.lv);cp.lv++}
+  if(cp.lv>=mx)cp.exp=0}
+async function doLive(l){
+  regen("stamina");
+  if(!S.party.length){toast("パーティーを編成してください");return}
+  if(S.stamina<l.st){toast(`スタミナが足りません(${l.st}必要)`);return}
+  S.stamina-=l.st;const ups=[],evos=[];
+  for(const uid of S.party){const cp=cpOf(uid);if(!cp)continue;
+    const before=cp.lv;gain(cp,l.xp);if(cp.lv>before)ups.push({cp,from:before});
+    const c=chr(cp.cid),el=EVO_LV[c.rarity];
+    if(el&&!cp.evo&&cp.lv>=el&&c.evoImg){cp.evo=true;evos.push(cp)}}
+  save();liveRes={l,ups};
+  for(const cp of evos)await playEvo(cp);
+  render()}
+function vLive(){
+  if(picking)return vPick();
+  const party=S.party.map(cpOf).filter(Boolean);
+  let h=`<h1>ライブ</h1><div class="stat"><div>スタミナ<br><span class="muted" id="sn"></span></div><div class="r"><b id="sm">${S.stamina}</b> / ${REG.stamina.max}</div></div>`;
+  if(liveRes)h+=`<div class="panel"><b>${liveRes.l.n}ライブ成功!</b><p class="muted">パーティー全員に経験値 +${liveRes.l.xp}</p>
+    ${liveRes.ups.length?liveRes.ups.map(u=>`<div>${esc(chr(u.cp.cid).name)}  Lv ${u.from} → ${u.cp.lv}${u.cp.lv>=maxLv(u.cp)?"(最大)":""}</div>`).join(""):'<div class="muted">レベルアップはありませんでした。最大レベルのキャラは経験値を得られません。</div>'}</div>`;
+  h+=`<h2>パーティー(${party.length}/${PARTY_MAX})</h2>`;
+  h+=party.length?`<div class="grid">${party.map(cp=>cardH(cp)).join("")}</div>`:`<div class="empty">パーティーが空です。</div>`;
+  h+=`<button class="btn" id="ed" style="width:100%;margin:12px 0">編成を変更</button><h2>ライブに挑戦</h2>`;
+  h+=LIVES.map(l=>`<button class="btn live" data-live="${l.k}" data-st="${l.st}"><b>${l.n}</b><span>スタミナ ${l.st} / 経験値 +${l.xp}</span></button>`).join("");
+  $("#app").innerHTML=h;
+  $("#app").onclick=e=>{
+    if(e.target.closest("#ed")){picking=true;pickSel=[...S.party];render();return}
+    const b=e.target.closest("[data-live]");if(b&&!b.disabled)doLive(LIVES.find(l=>l.k===b.dataset.live))}}
+function vPick(){
+  $("#app").innerHTML=`<h1>編成(<span id="pc">${pickSel.length}</span>/${PARTY_MAX})</h1>
+  <p class="muted">同じキャラ(同名・同ランク・同画像)のコピーは1枚だけ編成できます。</p>
+  <div class="row" style="margin-bottom:12px"><button class="btn main" id="ok">決定</button><button class="btn" id="cx">キャンセル</button></div>${sortUI()}
+  ${S.copies.length?`<div class="grid">${sorted().map(cp=>cardH(cp,pickSel.includes(cp.uid)?" sel":"")).join("")}</div>`:'<div class="empty">所持キャラがいません。</div>'}`;
+  $("#app").onclick=e=>{
+    if(e.target.closest("#cx")){picking=false;render();return}
+    if(e.target.closest("#ok")){S.party=pickSel.filter(cpOf);save();picking=false;render();return}
+    const p=e.target.closest(".pc");if(!p)return;const u=+p.dataset.u,cp=cpOf(u);
+    if(pickSel.includes(u))pickSel=pickSel.filter(x=>x!==u);
+    else if(pickSel.length>=PARTY_MAX){toast(`編成は最大${PARTY_MAX}枚です`);return}
+    else if(pickSel.some(x=>sameChar(cpOf(x),cp))){toast("同じキャラは同時に編成できません");return}
+    else pickSel.push(u);
+    p.classList.toggle("sel",pickSel.includes(u));$("#pc").textContent=pickSel.length}}
+
+/* ---------- 図鑑(覚醒・廃棄) ---------- */
+function vBook(){
+  const got=new Set(S.copies.map(c=>c.cid)),lost=chars.filter(c=>!got.has(c.id));
+  let h=`<h1>図鑑</h1><div class="stat"><div>所持 <b>${S.copies.length}</b> 枚</div><div class="r">獲得済み <b>${got.size}</b> / ${chars.length} 種</div></div>${sortUI()}`;
+  h+=S.copies.length?`<div class="grid">${sorted().map(cp=>cardH(cp)).join("")}</div>`:`<div class="empty">まだキャラを持っていません。</div>`;
+  if(lost.length)h+=`<h2>未獲得</h2><div class="grid">${lost.map(c=>`<div class="pc lock rar${c.rarity}"><div class="img" style="${bg(c.img)}"></div><div class="nm">？？？</div><div class="chips"><b>${RAR[c.rarity]}</b></div></div>`).join("")}</div>`;
+  $("#app").innerHTML=h;
+  $("#app").onclick=e=>{const p=e.target.closest(".pc[data-u]");if(p)actSheet(+p.dataset.u)}}
+function sheet(h){const s=$("#sheet");s.innerHTML=`<div class="sheet-in">${h}</div>`;s.hidden=false}
+function closeSheet(){const s=$("#sheet");s.hidden=true;s.innerHTML=""}
+function ask(msg,yes="OK"){return new Promise(res=>{
+  sheet(`<p style="font-weight:700;line-height:1.7;margin:4px 0 12px">${esc(msg)}</p><button class="btn main" id="ay">${yes}</button><button class="btn" id="an">キャンセル</button>`);
+  $("#ay").onclick=()=>{closeSheet();res(true)};$("#an").onclick=()=>{closeSheet();res(false)}})}
+function actSheet(uid){
+  const cp=cpOf(uid);if(!cp)return closeSheet();
+  const mats=S.copies.filter(m=>m.uid!==uid&&sameChar(m,cp)),can=cp.awk<MAX_AWK&&mats.length>0;
+  const why=cp.awk>=MAX_AWK?"覚醒は上限(5回)です。":!mats.length?"素材にできる同じキャラのコピーがありません。":`素材にできるコピー: ${mats.length}枚`;
+  const c=chr(cp.cid),nx=cp.lv>=maxLv(cp)?"最大レベル":`次のレベルまで あと ${need(cp.lv)-cp.exp} EXP`;
+  sheet(`<div class="sh"><div class="w">${cardH(cp)}</div><div><p class="muted">${nx}</p><p class="muted">${why}</p>${EVO_LV[c.rarity]&&!cp.evo?`<p class="muted">Lv${EVO_LV[c.rarity]}で自動進化</p>`:""}</div></div>
+  <button class="btn main" data-act="awk" data-u="${uid}" ${can?"":"disabled"}>覚醒する(同じキャラ1枚を消費)</button>
+  <button class="btn" data-act="del" data-u="${uid}">廃棄する</button><button class="btn" data-act="x">閉じる</button>`)}
+function matSheet(uid){
+  const cp=cpOf(uid),mats=S.copies.filter(m=>m.uid!==uid&&sameChar(m,cp)).sort((a,b)=>a.lv-b.lv||a.awk-b.awk);
+  sheet(`<b>素材にするコピーを選んでください</b><p class="muted">選んだコピーは消えます。覚醒すると最大レベルが+${AWK_STEP}されます。</p>
+  <div class="grid">${mats.map(m=>`<div data-m="${m.uid}" data-t="${uid}">${cardH(m)}</div>`).join("")}</div>
+  <button class="btn" data-act="back" data-u="${uid}">戻る</button>`)}
+$("#sheet").onclick=async e=>{
+  if(e.target.id==="sheet")return closeSheet();
+  const b=e.target.closest("[data-act],[data-m]");if(!b)return;
+  if(b.dataset.m){const t=cpOf(+b.dataset.t),m=cpOf(+b.dataset.m);if(!t||!m)return;
+    if(await ask(`${chr(m.cid).name}(Lv ${m.lv}・覚醒 ${m.awk})を素材にして覚醒します。素材は消えます。よろしいですか?`,"覚醒する")){
+      t.awk++;removeCopy(m.uid);save();render(true);toast("覚醒しました")}else matSheet(t.uid)
+    return}
+  const u=+b.dataset.u,a=b.dataset.act,cp=cpOf(u);
+  if(a==="x")closeSheet();
+  if(a==="awk"&&cp)matSheet(u);
+  if(a==="back")actSheet(u);
+  if(a==="del"&&cp){
+    if(await ask(`${chr(cp.cid).name}(Lv ${cp.lv}・覚醒 ${cp.awk})を廃棄しますか?元に戻せません。`,"廃棄する")){
+      removeCopy(u);save();render(true);toast("廃棄しました")}else actSheet(u)}};
+
+/* ---------- 登録 ---------- */
+function vReg(){
+  const e=editing?chr(editing):null;if(!e)editing=null;
+  if(dImg===null)dImg=e?e.img:"";if(dEvo===null)dEvo=e?e.evoImg:"";
+  const locked=e&&S.copies.some(c=>c.cid===e.id),r0=e?e.rarity:1;
+  let h=`<h1>キャラ登録</h1><div class="panel">
+  <label for="nm">名前</label><input type="text" id="nm" maxlength="30" value="${e?esc(e.name):""}">
+  <label for="rt">ランク</label><select id="rt" ${locked?"disabled":""}>${[4,3,2,1].map(r=>`<option value="${r}" ${r0===r?"selected":""}>${RAR[r]}</option>`).join("")}</select>
+  ${locked?'<p class="muted">所持コピーがあるため、ランクは変更できません。</p>':""}
+  <label for="at">属性</label><select id="at">${ATTRS.map(a=>`<option ${e&&e.attr===a?"selected":""}>${a}</option>`).join("")}</select>
+  <label for="fi">画像</label><input type="file" id="fi" accept="image/*"><div class="prev" id="pv" style="${bg(dImg)}"></div>
+  <div id="evs" ${r0<3?"hidden":""}><label for="fe">進化後の画像(SR・SSRは必須)</label><input type="file" id="fe" accept="image/*"><div class="prev" id="pe" style="${bg(dEvo)}"></div>
+  <p class="muted">SSRはLv55、SRはLv45で自動進化し、この画像に変わります。</p></div>
+  <div class="row" style="margin-top:14px"><button class="btn main" id="sv">${e?"変更を保存":"登録する"}</button>${e?'<button class="btn" id="cn">やめる</button>':""}</div></div>
+  <h2>登録済み(${chars.length})</h2><div class="panel">`;
+  h+=chars.length?[...chars].sort((a,b)=>b.rarity-a.rarity||a.name.localeCompare(b.name,"ja")).map(c=>`<div class="li"><div class="th" style="${bg(c.img)}"></div>
+    <div class="t">${esc(c.name)}<small>${RAR[c.rarity]} ・ ${c.attr}${c.rarity>=3&&!c.evoImg?" ・進化後画像なし":""}</small></div>
+    <button class="btn" data-e="${c.id}">編集</button><button class="btn" data-d="${c.id}">削除</button></div>`).join(""):'<div class="muted">まだありません。</div>';
+  $("#app").innerHTML=h+"</div>";
+  const pick=(id,pv,set)=>{$(id).onchange=async ev=>{const inp=ev.target,f=inp.files[0];if(!f)return;
+    try{const d=await resize(f);set(d);$(pv).style.backgroundImage=`url(${d})`;toast("画像を読み込みました")}
+    catch(er){toast(er.message||"画像の読み込みに失敗しました")}inp.value=""}};
+  pick("#fi","#pv",d=>dImg=d);pick("#fe","#pe",d=>dEvo=d);
+  $("#rt").onchange=()=>{$("#evs").hidden=+$("#rt").value<3};
+  $("#sv").onclick=async()=>{
+    const name=$("#nm").value.trim(),r=+$("#rt").value;
+    if(!name){toast("名前を入力してください");return}
+    if(r>=3&&!dEvo){toast("SR・SSRは進化後の画像が必要です");return}
+    const c={id:e?e.id:newId(),name,rarity:r,attr:$("#at").value,img:dImg||"",evoImg:r>=3?dEvo:""};
+    try{await dbPut(c)}catch(er){toast("画像の保存に失敗しました: "+(er&&er.message||"原因不明"));return}
+    if(e)chars[chars.findIndex(x=>x.id===e.id)]=c;else chars.push(c);
+    rebuildKeys();toast(!db?"登録しました(※この環境では画面を閉じると消えます)":e?"保存しました":"登録しました");editing=null;dImg=dEvo=null;vReg()};
+  if(e)$("#cn").onclick=()=>{editing=null;dImg=dEvo=null;vReg()};
+  $("#app").onclick=async ev=>{const b=ev.target.closest("button[data-e],button[data-d]");if(!b)return;
+    if(b.dataset.e){editing=b.dataset.e;dImg=dEvo=null;vReg();scrollTo(0,0)}
+    if(b.dataset.d&&await ask("このキャラと、所持しているコピーをすべて削除します。よろしいですか?","削除する")){
+      const id=b.dataset.d;await dbDel(id);chars=chars.filter(c=>c.id!==id);
+      S.copies.filter(c=>c.cid===id).forEach(c=>removeCopy(c.uid));rebuildKeys();save();vReg()}}}
+
+/* ---------- その他 ---------- */
+function vSet(){
+  $("#app").innerHTML=`<h1>その他</h1>
+  <div class="panel"><b>バックアップ</b><p class="muted">ブラウザのデータを消すとキャラも消えます。定期的に書き出してください。</p>
+  <div class="row"><button class="btn" id="ex">書き出し</button><button class="btn" id="im">読み込み</button></div><input type="file" id="imf" accept="application/json" hidden></div>
+  <div class="panel"><b>ガチャ履歴(累計 ${S.total} 回)</b><div class="hist">${S.history.length?S.history.slice(0,30).map(h=>{const c=chr(h.cid);
+    return`<div><span>${new Date(h.t).toLocaleDateString("ja-JP",{month:"numeric",day:"numeric"})} ${RAR[h.r]}</span>${c?esc(c.name):"(削除済み)"}</div>`}).join(""):'<p class="muted">まだありません。</p>'}</div></div>
+  <div class="panel"><b>ゲームのリセット</b><p class="muted">所持キャラ・パーティー・履歴・チケット・スタミナを初期化します。登録したキャラは残ります。</p>
+  <button class="btn" id="rs" style="width:100%">リセットする</button></div>`;
+  $("#app").onclick=null;
+  $("#rs").onclick=async()=>{if(await ask("ゲームの進行状況をリセットします。よろしいですか?","リセットする")){S=fresh();save();vSet()}};
+  $("#ex").onclick=()=>{const blob=new Blob([JSON.stringify({v:3,chars,state:S})],{type:"application/json"});
+    const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="idol-gacha-backup.json";a.click();URL.revokeObjectURL(a.href)};
+  $("#im").onclick=()=>$("#imf").click();
+  $("#imf").onchange=async ev=>{const f=ev.target.files[0];if(!f)return;
+    try{const d=JSON.parse(await f.text());if(!Array.isArray(d.chars)||!d.state)throw 0;
+      if(!await ask("現在のデータを上書きして読み込みますか?","読み込む"))return;
+      await dbClear();for(const c of d.chars)await dbPut(c);chars=d.chars;rebuildKeys();
+      S=Object.assign(fresh(),d.state);S.copies=S.copies.filter(cp=>chr(cp.cid));S.party=S.party.filter(cpOf);
+      save();toast("読み込みました");render()}
+    catch(e){toast("バックアップファイルが正しくありません")}}}
+
+/* ---------- 起動 ---------- */
+(async()=>{
+  loadState();
+  try{db=await openDB();chars=await dbAll();
+    chars.forEach(c=>{if(!ATTRS.includes(c.attr))c.attr="cute";c.evoImg=c.evoImg||""});
+    rebuildKeys();S.copies=S.copies.filter(cp=>chr(cp.cid));S.party=S.party.filter(cpOf)}
+  catch(e){toast("画像の保存領域を開けませんでした")}
+  render();setInterval(tick,1000);document.addEventListener("visibilitychange",tick)
+})();
+</script>
+</body>
+</html>
